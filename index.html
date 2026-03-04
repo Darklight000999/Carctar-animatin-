@@ -1,31 +1,25 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cyber Silhouette 3D</title>
-
+<title>Cyber Silhouette</title>
 <style>
 body {
-  margin: 0;
-  overflow: hidden;
-  background: radial-gradient(circle at center, #0f2027, #000);
+  margin:0;
+  overflow:hidden;
+  background: radial-gradient(circle, #0f2027, #000);
 }
 </style>
 </head>
 <body>
 
-<script type="module">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160/build/three.module.js';
-import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160/examples/jsm/loaders/GLTFLoader.js';
-import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.160/examples/jsm/controls/OrbitControls.js';
-
+<script>
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x0f2027);
 
 const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 1000);
-camera.position.set(0, 2, 6);
+camera.position.z = 8;
 
 const renderer = new THREE.WebGLRenderer({antialias:true});
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -37,46 +31,67 @@ window.addEventListener('resize', ()=>{
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-const light1 = new THREE.DirectionalLight(0x00ffff, 2);
-light1.position.set(5,5,5);
-scene.add(light1);
+// LIGHT
+const light = new THREE.DirectionalLight(0x00ffff, 2);
+light.position.set(5,5,5);
+scene.add(light);
 
 const ambient = new THREE.AmbientLight(0x222222);
 scene.add(ambient);
 
-// Orbit Controls (Full 360° Rotate)
-const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
+// BLACK MATERIAL
+const material = new THREE.MeshStandardMaterial({
+  color:0x000000,
+  emissive:0x00ffff,
+  emissiveIntensity:0.2,
+  roughness:0.5
+});
 
-// Load Your 3D Model (Exported from Blender)
-const loader = new GLTFLoader();
+// HEAD
+const head = new THREE.Mesh(new THREE.CylinderGeometry(1,1,2.5,32), material);
+head.position.y = 3;
+scene.add(head);
 
-loader.load('model.glb', function(gltf) {
+// BODY
+const body = new THREE.Mesh(new THREE.BoxGeometry(2.5,4,1.5), material);
+body.position.y = 0;
+scene.add(body);
 
-    const model = gltf.scene;
-    scene.add(model);
+// LEGS
+const legGeo = new THREE.BoxGeometry(0.8,3,0.8);
 
-    model.traverse((child)=>{
-        if(child.isMesh){
-            child.material.color.set(0x000000);
-            child.material.emissive = new THREE.Color(0x00ffff);
-            child.material.emissiveIntensity = 0.15;
-        }
-    });
+const leftLeg = new THREE.Mesh(legGeo, material);
+leftLeg.position.set(-0.7,-3,0);
+scene.add(leftLeg);
 
-    model.scale.set(2,2,2);
+const rightLeg = new THREE.Mesh(legGeo, material);
+rightLeg.position.set(0.7,-3,0);
+scene.add(rightLeg);
 
-    // Example: Head rotation control
-    document.addEventListener('mousemove', (e)=>{
-        const x = (e.clientX / window.innerWidth - 0.5) * 2;
-        model.rotation.y = x * 0.5;
-    });
+// ARMS
+const armGeo = new THREE.BoxGeometry(0.7,3,0.7);
 
+const leftArm = new THREE.Mesh(armGeo, material);
+leftArm.position.set(-2,1,0);
+scene.add(leftArm);
+
+const rightArm = new THREE.Mesh(armGeo, material);
+rightArm.position.set(2,1,0);
+scene.add(rightArm);
+
+// ROTATE FULL BODY
+document.addEventListener('mousemove', (e)=>{
+  const x = (e.clientX / window.innerWidth - 0.5) * 2;
+  head.rotation.y = x;
+  body.rotation.y = x;
+  leftLeg.rotation.y = x;
+  rightLeg.rotation.y = x;
+  leftArm.rotation.y = x;
+  rightArm.rotation.y = x;
 });
 
 function animate(){
   requestAnimationFrame(animate);
-  controls.update();
   renderer.render(scene,camera);
 }
 animate();
